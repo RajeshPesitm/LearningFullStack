@@ -2,6 +2,8 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from fastapi import HTTPException, Depends
+
 from .models import Base
 
 engine = None
@@ -16,5 +18,15 @@ def init_db():
 
     engine = create_engine(DB_URL)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    # Create the DB tables
+
     Base.metadata.create_all(bind=engine)
+
+# FastAPI dependency to get a DB session
+def get_db():
+    if SessionLocal is None:
+        raise HTTPException(status_code=503, detail="Database not initialized. Call /init-db first.")
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
