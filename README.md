@@ -1,109 +1,138 @@
+## 🎯 Refactor Made: New Model "Department" Created
+New chat detected… **initialising new database model build mode** 🧑‍💻
 
-## 🎯 Refactor Made: Safley Delete Message Model and messages table
-New change detected... **initialising schema removal protocol** 🧑‍💻
-
-You want to:
-✅ **Remove**:
-
-* `Message` SQLAlchemy model
-* `MessageInput` Pydantic model
-* `/submit-message` route
-* `/delete-message` route
-* The table itself from your MySQL database
-
-✅ **Retain**:
-
-* `GET /` route
-* `GET /init-db` route
-* `get_db()` dependency
-* Database initialization capability
+Let’s proceed step by step:
 
 ---
 
-Below is a **step-by-step guide** to safely perform this cleanup:
+## 🧭 **Project Objective**
+
+✅ Create **three tables**:
+
+* Student
+* Subject
+* Faculty
+
+✅ Define **relationships**:
+
+* `Student` and `Subject`: each has `semester` (n:1 to semesters)
+* `Faculty` handles many `Subjects` (n\:m)
+
+✅ Define **Pydantic models** for validation.
+
+✅ Expose **API routes** to:
+
+* Insert/Delete Students, Subjects, Faculties
+* Query students by semester
+* Query faculties by subject
+* Query subjects by faculty
 
 ---
 
-## 🧾 **1️⃣ Clean Up `models.py`**
+## 🧮 **1️⃣ SQLAlchemy Models**
 
-**Edit to remove everything related to messages:**
-
-```python
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
-```
-
-✅ That’s it. The model is fully removed from your code.
+Below is a clean **pseudocode plan** for your models.
 
 ---
 
-## 🗂️ **2️⃣ Remove Routes from `main.py`**
+### **🎓 Student**
 
-**Delete these functions completely:**
-
-* `submit_message()`
-* `delete_message_by_email()`
-
-**Be sure to also remove these imports at the top:**
-
-```python
-from .models import Message, MessageInput
-```
+| Column   | Type    | Notes                |
+| -------- | ------- | -------------------- |
+| usn      | String  | PK, e.g., 4PM22CS001 |
+| name     | String  |                      |
+| semester | Integer | 1–8                  |
 
 ---
 
-✅ This removes all endpoints using the `messages` table.
+### **📚 Subject**
+
+| Column        | Type    | Notes            |
+| ------------- | ------- | ---------------- |
+| subject\_code | String  | PK, e.g., BCS305 |
+| name          | String  |                  |
+| semester      | Integer | 1–8              |
 
 ---
 
-## 🗄️ **3️⃣ Drop the Table from MySQL**
+### **👩‍🏫 Faculty**
 
-Since you have **MySQL Admin access**, simply run:
-
-```sql
-DROP TABLE IF EXISTS messages;
-```
-You can also do the same using GUI
-
-✅ This ensures your database volume is cleaned up.
+| Column | Type   | Notes            |
+| ------ | ------ | ---------------- |
+| code   | String | PK, 4-digit code |
+| name   | String |                  |
 
 ---
 
-## 🛡️ **4️⃣ Verify**
+### **🔗 FacultySubjects Association Table**
 
-**Restart your FastAPI app**, then test:
-
-* `GET /` → should still work
-* `GET /init-db` → should work, but now it will not recreate `messages` (since no models are defined)
-
-✅ **Note:** `Base.metadata.create_all()` will do nothing now, because there are no models left in `Base`.
+| Column        | Type   | Notes                        |
+| ------------- | ------ | ---------------------------- |
+| faculty\_code | String | FK to Faculty(code)          |
+| subject\_code | String | FK to Subject(subject\_code) |
 
 ---
 
-## 🧠 **5️⃣ Considerations**
+## **2️⃣ SQLAlchemy Model Code**
 
-> **Optional cleanup:**
+Let’s implement the **full code** for `models.py`:
 
-* You might consider eventually removing `Base` entirely if you no longer need any tables.
-* If you plan to add new models later, keep `Base` as is.
-
-✅ You don’t need to change `get_db()` in `database.py`; it remains useful for future queries.
 
 ---
 
-## 🔍 **Summary Checklist**
+## 🛠️ **3️⃣ Database Initialization**
 
-✅ Remove:
+**No change needed to `database.py`**:
 
-* `Message` and `MessageInput` from `models.py`
-* Imports and related routes from `main.py`
+* `Base.metadata.create_all()` will create all tables.
 
-✅ Drop table:
+---
 
-```sql
-DROP TABLE IF EXISTS messages;
-```
+## 🧩 **4️⃣ Routes Overview**
+
+✅ **Student routes:**
+
+* `POST /student` insert
+* `DELETE /student/{usn}` delete
+* `GET /students/semester/{semester}` list all students in a semester
+
+✅ **Subject routes:**
+
+* `POST /subject` insert
+* `DELETE /subject/{subject_code}` delete
+
+✅ **Faculty routes:**
+
+* `POST /faculty` insert
+* `DELETE /faculty/{code}` delete
+* `GET /faculty/by-subject/{subject_code}` list faculties handling subject
+* `GET /subject/by-faculty/{faculty_code}` list subjects handled by faculty
+
+---
+
+## ✨ **5️⃣ Example Route Implementation (FastAPI)**
+
+Below are **example route signatures** you can copy into `main.py`:
+
+
+
+✅ You can **expand** this with:
+
+* Assign/Unassign subjects to faculties
+* Validation
+
+---
+
+## 🏁 **6️⃣ Next Steps**
+
+1. Copy the models code into `models.py`
+2. Update `main.py` with these endpoints
+3. Restart your FastAPI app
+4. Call `/init-db` to create tables
+
+✅ You’re ready to test!
+
+If you want help with **unit tests or example payloads**, I’m here.
 
 ✅ Restart and test. (Assuming MySql and Adminer are running)
 
@@ -127,6 +156,11 @@ docker rm myapp-backend
 ```bash
 docker build -t myapp-backend .
 ```
+
+##### Not to forget to Remove dangling null images
+```bash
+docker rmi $(docker images -f dangling=true -q)
+```
 #### Only Once: run Backend
 ```
 docker run -d \
@@ -142,19 +176,6 @@ docker run -d \
 curl http://localhost:8000/init-db
 ```
 
-### 🧪 Fails Now: Any number of times: POST request:/submit-message
-
-```bash
-curl -X POST http://localhost:8000/submit-message \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Alice", "email":"alice@example.com", "message":"Hi!"}'
-```
-
-### 🧪 Fails Now: Any number of times: DELETE request: /delete-message
-
-```bash
-curl -X DELETE "http://localhost:8000/delete-message?email=alice@example.com"
-```
 
 
 
