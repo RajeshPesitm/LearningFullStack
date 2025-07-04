@@ -38,3 +38,15 @@ def submit_message(payload: MessageInput, db: Session = Depends(get_db)):
         status_code=201,
         content={"message": "Submitted successfully", "id": new_msg.id}
     )
+
+@app.delete("/delete-message")
+def delete_message_by_email(email: str, db: Session = Depends(get_db)):
+    """
+    Delete the first message found with the given email.
+    """
+    msg = db.query(Message).filter(Message.email == email).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message with this email not found")
+    db.delete(msg)
+    db.commit()
+    return {"status": "Deleted", "email": email}

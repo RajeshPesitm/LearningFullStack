@@ -1,6 +1,27 @@
 # 📘 **FastAPI + SQLAlchemy: How `/submit-message` Interacts with the Database**
 
 ## 🎯 Goal
+Enable users to submit and Delete messages via a REST API. FastAPI handles:
+
+* **Input validation**
+* **Database session management**
+* **Data persistence**
+
+---
+## 📁 Project Structure: (Key changes)
+
+```
+project-root/
+├── backend/
+│   └── app/
+│       ├── main.py        # FastAPI app with routes: Modified
+│       ├── database.py    # DB engine, session, and get_db() dependency: Modified
+│       └── models.py      # SQLAlchemy model + Pydantic input model: Modified
+```
+
+
+
+
 Supported endpoints:
 
     GET / → confirms app is running (Already done in previous commit)
@@ -21,27 +42,7 @@ curl -X POST http://localhost:8000/submit-message \
   -d '{"name":"Alice", "email":"alice@example.com", "message":"Hi!"}'
 ```
 
-Enable users to submit messages via a REST API. FastAPI handles:
-
-* **Input validation**
-* **Database session management**
-* **Data persistence**
-
----
-# 📘 **FastAPI + SQLAlchemy: How `/submit-message` Interacts with the Database**
-## 📁 Project Structure: (Key changes)
-
-```
-project-root/
-├── backend/
-│   └── app/
-│       ├── main.py        # FastAPI app with routes: Modified
-│       ├── database.py    # DB engine, session, and get_db() dependency: Modified
-│       └── models.py      # SQLAlchemy model + Pydantic input model: Modified
-```
-
-
-
+## Compile and Run the Project
 ### ✅ 1. **Only Once: Create Docker Network**
 
 Run this once:
@@ -84,17 +85,16 @@ Visit: [http://localhost:8080](http://localhost:8080)
 
 
 ### ✅ 10. **Every time code is updated: Build and Run FastAPI Container**
-### Once Changes are made to backend:
+#### Once Changes are made to backend:
 commands to rebuild and restart containers:
-### From Project Root:
+#### From Project Root:
 
   remove old  
 ```
 docker rm myapp-backend
 ```
 
-
-### Very Important: From inside project-root/backend 
+#### Very Important: From inside project-root/backend 
 
   build  
   Note: use option --no-cache if required  
@@ -103,15 +103,15 @@ docker rm myapp-backend
 docker build -t myapp-backend .
 ```
 
-### From Project Root: start MysQL+Adminer (no need to run again and again)
+#### From Project Root: start MysQL+Adminer (no need to run again and again)
 
 ```bash
 docker start myapp-mysql &&
 docker start myapp-adminer &&
 ```
 
-  ### From Project Root:
-run backend
+  #### From Project Root:
+#### Only Once: run backend 
 
 ```bash
 docker run -d \
@@ -120,8 +120,72 @@ docker run -d \
   -p 8000:8000 \
   myapp-backend
 ```
+
+### ✅ 11. **Trigger DB Setup**
+
+After MySQL is ready (check with Adminer), run:
+
+```bash
+curl http://localhost:8000/init-db
+```
+
+Expected response:
+
+```json
+{"status": "Database initialized successfully"}
+```
+
+Then check in Adminer → `messages` table will be created.
+
 ---
 
+
+## Useful Commands to Handle Docker Containers
+
+```bash
+docker images
+docker ps
+```
+##### Remove dangling null images
+```bash
+docker image prune
+```
+##### Start or stop (followed by docker run)
+```bash
+docker start myapp-mysql &&
+docker start myapp-adminer &&
+```
+
+
+
+
+
+---
+
+
+## Test the Fast API Routes
+### 🧪 Once Every Time Container restarts: get request:  /init-db:
+
+```bash
+curl http://localhost:8000/init-db
+```
+
+### 🧪 Any number of times: POST request:/submit-message
+
+```bash
+curl -X POST http://localhost:8000/submit-message \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Alice", "email":"alice@example.com", "message":"Hi!"}'
+```
+
+### 🧪 Any number of times: DELETE request: /delete-message
+
+```bash
+curl -X DELETE "http://localhost:8000/delete-message?email=alice@example.com"
+```
+
+
+---
 ## 🧩 Key Files and Responsibilities
 
 ### 🔹 `models.py`
@@ -186,24 +250,9 @@ def submit_message(payload: MessageInput, db: Session = Depends(get_db)):
 
 ---
 
+
+
 ## 🔄 How It All Works — Step-by-Step
-
-### 🧪 Once Every Time Container restarts: /init-db:
-
-```bash
-curl http://localhost:8000/init-db
-```
-
-### 🧪 Any number of times: When you send a POST request:
-
-```bash
-curl -X POST http://localhost:8000/submit-message \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Alice", "email":"alice@example.com", "message":"Hi!"}'
-```
-
----
-
 ### 🧠 FastAPI handles it like this:
 
 1. ✅ **Validates** the incoming JSON using `MessageInput` (Pydantic)
@@ -246,5 +295,3 @@ curl -X POST http://localhost:8000/submit-message \
 * ✅ Scales well when more routes or models are added
 
 ---
-
-Would you like a visual diagram to go with this explanation for student slides?
