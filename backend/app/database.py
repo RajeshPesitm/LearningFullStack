@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException, Depends
 
-from .models import Base
+from app.models import Base
 
 engine = None
 SessionLocal = None

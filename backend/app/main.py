@@ -3,9 +3,9 @@
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from . import database
-from .database import get_db, init_db
-from .models import Student, StudentInput, Subject, SubjectInput, Faculty, FacultyInput
+from app import database
+from app.database import get_db, init_db
+from app.models import Student, StudentInput, Subject, SubjectInput, Faculty, FacultyInput
 
 
 app = FastAPI()
@@ -26,7 +26,7 @@ def init_db():
 
 @app.post("/student")
 def add_student(student: StudentInput, db: Session = Depends(get_db)):
-    s = Student(**student.dict())
+    s = Student(**student.model_dump())
     db.add(s)
     db.commit()
     return {"status": "Student added"}
@@ -46,7 +46,7 @@ def list_students(semester: int, db: Session = Depends(get_db)):
 
 @app.post("/subject")
 def add_subject(subject: SubjectInput, db: Session = Depends(get_db)):
-    s = Subject(**subject.dict())
+    s = Subject(**subject.model_dump())
     db.add(s)
     db.commit()
     return {"status": "Subject added"}
@@ -62,7 +62,7 @@ def delete_subject(subject_code: str, db: Session = Depends(get_db)):
 
 @app.post("/faculty")
 def add_faculty(faculty: FacultyInput, db: Session = Depends(get_db)):
-    f = Faculty(**faculty.dict())
+    f = Faculty(**faculty.model_dump())
     db.add(f)
     db.commit()
     return {"status": "Faculty added"}

@@ -4,3 +4,5 @@ sqlalchemy
 pymysql
 mysql-connector-python
 pydantic[email]
+pytest                   # For testing (pytest Depends on httpx)
+httpx                    # FastAPI’s TestClient depends on httpx

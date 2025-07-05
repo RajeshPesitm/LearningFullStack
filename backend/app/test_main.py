@@ -2,8 +2,8 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from .main import app
-from . import database
+from app.main import app # If not running in Docker, use from .main import app
+from app import database
 
 client = TestClient(app)
 
